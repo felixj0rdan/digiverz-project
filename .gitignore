@@ -1,3 +1,6 @@
 /backend/venv
 /backend/__pycache__
 /assets
+/backend/xgbr.py
+/backend/model.py
+/backend/linear.py

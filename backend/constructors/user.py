@@ -26,7 +26,7 @@ class UserSignup(Resource):
     )
 
     def post(self):
-        data = RegisterUser.parser.parse_args()
+        data = UserSignup.parser.parse_args()
 
         if UserModel.find_one_by_email(data["email"]):
             return {"message": "User already exists."}
@@ -111,5 +111,12 @@ class TokenRefresh(Resource):
     @jwt_refresh_token_required
     def get(self):
         current_user = get_jwt_identity()
-        new_token = create_access_token(identity=current_user, fresh=False)
-        return {"access_token": new_token}, 200
+        # new_token = create_access_token(identity=current_user, fresh=False)
+        # return {"access_token": new_token}, 200
+        access_token = create_access_token(identity=str(current_user), fresh=False)
+        refresh_token = create_refresh_token(current_user)
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "user_id": current_user,
+        }, 200

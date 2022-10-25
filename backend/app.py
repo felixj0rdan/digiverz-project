@@ -3,10 +3,11 @@ from flask_pymongo import PyMongo, pymongo
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
 import pandas as pd
+from flask_cors import CORS
 
 from blacklist import BLACKLIST
 from constructors.user import UserSignup, UserLogin, UserLogout, TokenRefresh
-from constructors.train import UploadCSV
+from constructors.mlmodel import Predict, PredictionFile
 
 ASSETS_FOLDER = "assets"
 
@@ -17,6 +18,7 @@ app.config["JWT_BLACKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
 api = Api(app)
 app.secret_key = "felix"
 jwt = JWTManager(app)
+CORS(app)
 
 
 @jwt.expired_token_loader
@@ -46,18 +48,19 @@ def check_if_token_in_blacklist(decrypted_token):
     return decrypted_token["jti"] in BLACKLIST
 
 
-api.add_resource(UserSignup, "/api/signup")
-api.add_resource(UserLogin, "/api/login")
-api.add_resource(UserLogout, "/api/logout")
+api.add_resource(UserSignup, "/api/user/signup")
+api.add_resource(UserLogin, "/api/user/login")
+api.add_resource(UserLogout, "/api/user/logout")
 api.add_resource(TokenRefresh, "/api/refresh")
-api.add_resource(UploadCSV, "/api/train")
+api.add_resource(Predict, "/api/train")
+api.add_resource(PredictionFile, "/api/prediction-file/<string:path>")
 
 
 @app.route("/api/training-file/<string:path>")
 def getFile(path):
     print(path)
     try:
-        data = pd.read_csv(ASSETS_FOLDER + "/" + path, nrows=50)
+        data = pd.read_csv(ASSETS_FOLDER + "/train/" + path, nrows=50)
         return render_template("table.html", tables=[data.to_html()], titles=[""])
 
     except FileNotFoundError:
