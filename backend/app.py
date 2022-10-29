@@ -52,7 +52,7 @@ api.add_resource(UserSignup, "/api/user/signup")
 api.add_resource(UserLogin, "/api/user/login")
 api.add_resource(UserLogout, "/api/user/logout")
 api.add_resource(TokenRefresh, "/api/refresh")
-api.add_resource(Predict, "/api/train")
+api.add_resource(Predict, "/api/predict/")
 api.add_resource(PredictionFile, "/api/prediction-file/<string:path>")
 
 

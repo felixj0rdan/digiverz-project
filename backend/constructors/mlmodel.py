@@ -34,14 +34,20 @@ ALLOWED_EXTENSIONS = set(["csv", "xls", "xlsx"])
 class Predict(Resource):
     @jwt_required
     def post(self):
+        # print(request.values)
+        # data = dict(request.form)
+        print("data")
 
-        if "file" not in request.files:
+        if not request.files.getlist("file")[0]:
+            print("check123")
             return {"message": "No file uploaded!"}, 404
 
+        print("Check")
         file = request.files.getlist("file")[0]
+        # print(request.files.getlist("file[]"))
         errors = {}
         # for file in files:
-        # print("check")
+        print("check585")
 
         def create_feature(df):
 
@@ -57,9 +63,9 @@ class Predict(Resource):
             and "." in file.filename
             and file.filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
         ):
-            user_id = get_jwt_identity() #ignore
+            user_id = get_jwt_identity()  # ignore
 
-            user = UserModel.find_by_id(user_id) #ignore
+            user = UserModel.find_by_id(user_id)  # ignore
 
             filename = secure_filename(file.filename)
 
@@ -72,7 +78,7 @@ class Predict(Resource):
                 user_id, URL + "/api/training-file/" + FILE
             )
 
-            training_file.add_to_db() #ignore
+            training_file.add_to_db()  # ignore
             success = True
 
             # D:\kaar-projects\digiverz-project\backend\assets\634d20b43135995401986e22-train.csv
@@ -115,7 +121,7 @@ class Predict(Resource):
             x = mean_squared_error(test["Sales"], test["pred"], squared=False)
             print(x)
 
-            days = int(request.values["days"])
+            days = int(request.form.get("days"))
 
             # count = 600
             start_date = df.index[-1]

@@ -32,7 +32,8 @@ export class AuthService {
     }
 
     getIsAuth() {
-        return this.isAuthenticated;
+        // return this.isAuthenticated;
+        return this.getAuthData();
     }
 
     getAuthStatusListener() {
@@ -55,14 +56,14 @@ export class AuthService {
 
     login(email: string, password: string) {
         const authData: AuthData = {email: email, password: password};
-        console.log(authData);
+        // console.log(authData);
         
         this.http.post<any>(BACKEND_URL + 'login', authData)
         .subscribe(response => {
             const access_token = response.access_token;
             this.access_token = access_token;
             this.refresh_token = response.refresh_token;
-            console.log(response);
+            // console.log(response);
             
             if(access_token){
                 this.isAuthenticated = true;
@@ -116,24 +117,26 @@ export class AuthService {
         this.router.navigate(['/']);
     }
 
-    private setAuthTimer(duration: number) {
-        console.log("Setting timer: "+duration);
+    // private setAuthTimer(duration: number) {
+    //     console.log("Setting timer: "+duration);
         
-        this.tokenTimer = setTimeout(() => {
-            this.logout();
-        }, duration * 1000 )   
-    }
+    //     this.tokenTimer = setTimeout(() => {
+    //         this.logout();
+    //     }, duration * 1000 )   
+    // }
 
     private saveAuthData(access_token: string, refresh_token: string, userId: string) {
         localStorage.setItem('access_token', access_token);
         localStorage.setItem('refresh_token', refresh_token);
         localStorage.setItem('userId', userId);
+        localStorage.setItem('logged_in', "true");
     }
 
     private clearAuthData() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('userId');
+        localStorage.removeItem('logged_in')
     }
 
     private getAuthData() {
@@ -148,6 +151,7 @@ export class AuthService {
             access_token: access_token,
             refresh_token: refresh_token,
             userId: userId,
+            loggend_in: localStorage.getItem('logged_in')
         }
     }
 
