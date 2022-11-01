@@ -1,6 +1,9 @@
-mat-card {
-    width: 80%;
+.mat-card-top{
+    width: 300px;
     margin: auto;
+    align-items: center;
+    height: 415px;
+    margin-bottom: 20px;
 }
 
 mat-form-field,
@@ -9,11 +12,19 @@ textarea {
 
 }
 
-mat-spinner {
+.main-loader {
     margin: auto;
+    margin-top: 35%;
 }
 
-input[type="file"] {
+mat-radio-button {
+    margin: 3px;
+}
+h2 {
+    margin-top: 7px;
+}
+
+.inputFile {
     visibility: hidden;
 }
 
@@ -25,3 +36,58 @@ input[type="file"] {
 .image-preview img {
     height: 100%;
 }
+
+.days {
+    width: 110px;
+    margin-top: -14px;
+}
+
+.main {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.file-loader {
+    height: 10px;
+    width: 10px;
+}
+
+
+.PredictionChart {
+    height: 400;
+    margin-top: 35px;
+}
+
+
+.upload-button {
+    margin-bottom: 20px;
+    width: 490px;
+    padding-left: 8px;
+}
+
+.file-name {
+    margin-top: 10px;
+    margin-right: 5px;
+    margin-left: 15px;
+
+}
+
+.periodicity {
+    font-size: 18px;
+}
+
+.metrics-invisible {
+    width: 50%;
+    display: none;
+}
+.metrics-visible {
+    width: 50%;
+}
+.links{
+    visibility: hidden;
+}
+.pred-invisible {
+    display: none;
+}
+/* .pred-visible {} */

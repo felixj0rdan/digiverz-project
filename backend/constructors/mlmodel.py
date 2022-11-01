@@ -1,23 +1,11 @@
-from flask_restful import Resource, reqparse
-from flask import jsonify
-import json
-from flask import (
-    request,
-    jsonify,
-    send_file,
-    send_from_directory,
-    url_for,
-    redirect,
-    render_template,
-)
-import flask_excel as excel
+from flask_restful import Resource
+from flask import request, send_from_directory
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import get_jwt_identity, jwt_required
 import os
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from sktime.forecasting.model_selection import temporal_train_test_split
 import xgboost as xgb
 from sklearn.metrics import mean_squared_error
@@ -32,22 +20,31 @@ ALLOWED_EXTENSIONS = set(["csv", "xls", "xlsx"])
 
 
 class Predict(Resource):
-    @jwt_required
+    # @jwt_required
     def post(self):
-        # print(request.values)
-        # data = dict(request.form)
-        print("data")
 
         if not request.files.getlist("file")[0]:
-            print("check123")
             return {"message": "No file uploaded!"}, 404
 
-        print("Check")
         file = request.files.getlist("file")[0]
-        # print(request.files.getlist("file[]"))
-        errors = {}
-        # for file in files:
-        print("check585")
+        duration = int(request.form.get("duration"))
+        periodicity = request.form.get("periodicity")
+        days = 0
+        freq = ""
+        datetimeFormat = ""
+
+        if periodicity == "months":
+            days = int(duration) * 28
+            freq = "M"
+            datetimeFormat = "%b-%y"
+        elif periodicity == "weeks":
+            days = int(duration) * 7
+            freq = "W"
+            datetimeFormat = "Week %W, %y"
+        else:
+            days = int(duration)
+            freq = "D"
+            datetimeFormat = "%d-%m-%y"
 
         def create_feature(df):
 
@@ -63,14 +60,14 @@ class Predict(Resource):
             and "." in file.filename
             and file.filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
         ):
-            user_id = get_jwt_identity()  # ignore
+            user_id = get_jwt_identity()
 
-            user = UserModel.find_by_id(user_id)  # ignore
+            user = UserModel.find_by_id(user_id)
 
             filename = secure_filename(file.filename)
 
             URL = request.url_root[:-1]
-            FILE = str(user_id) + "-" + filename
+            FILE = "file" + "-" + filename
 
             file.save(os.path.join(ASSETS_FOLDER + "/train/", FILE))
 
@@ -78,25 +75,20 @@ class Predict(Resource):
                 user_id, URL + "/api/training-file/" + FILE
             )
 
-            training_file.add_to_db()  # ignore
-            success = True
-
-            # D:\kaar-projects\digiverz-project\backend\assets\634d20b43135995401986e22-train.csv
+            training_file.add_to_db()
 
             df = pd.read_csv("assets/train/" + FILE)
 
             df["Date"] = pd.to_datetime(df["Date"])
             df.sort_values(by="Date", inplace=True)
-            df = df.groupby(pd.Grouper(key="Date", freq="D")).sum()
-            print(df.tail())
+            df = df.groupby(pd.Grouper(key="Date", freq=freq)).sum()  #
 
             train, test = temporal_train_test_split(df, test_size=0.25)
 
             train = create_feature(train)
             test = create_feature(test)
 
-            # FEATURES = ["dayofweek", "month", "year", "dayofyear"]
-            FEATURES = ["dayofyear"]
+            FEATURES = ["dayofyear", "month", "dayofweek"]
             TARGET = "Sales"
 
             X_train = train[FEATURES]
@@ -117,16 +109,11 @@ class Predict(Resource):
 
             test["pred"] = reg.predict(X_test)
             df = df.merge(test[["pred"]], how="left", left_index=True, right_index=True)
+            test["error"] = np.abs(test[TARGET] - test["pred"])
 
-            x = mean_squared_error(test["Sales"], test["pred"], squared=False)
-            print(x)
+            rmse = mean_squared_error(test["Sales"], test["pred"], squared=False)
 
-            days = int(request.form.get("days"))
-
-            # count = 600
             start_date = df.index[-1]
-            # print(X_test.tail())
-            # print(df.index[-1])
             pred_df = pd.DataFrame(
                 {
                     "Date": [
@@ -137,10 +124,9 @@ class Predict(Resource):
                     ]
                 }
             )
-            # pred_df.set_index = pd.to_datetime(pred_df["Date"])
 
             pred_df["Date"] = pd.to_datetime(pred_df["Date"])
-            pred_df = pred_df.groupby(pd.Grouper(key="Date", freq="D")).sum()
+            pred_df = pred_df.groupby(pd.Grouper(key="Date", freq=freq)).sum()  #
             pred_df = create_feature(pred_df)
             X_pred_df = pred_df[FEATURES]
 
@@ -148,13 +134,25 @@ class Predict(Resource):
 
             pred_df["Sales"] = reg.predict(X_pred_df)
 
-            # print(pred_df.head())
+            pred_df.reset_index(inplace=True)
+            pred_df = pred_df.groupby(pd.Grouper(key="Date", freq=freq)).sum()
+            pred_df.sort_values(by="Date", inplace=True)
+            pred_df.index = pred_df.index.strftime(datetimeFormat)
+            pred_df.reset_index(inplace=True)
 
-            # pred_df["pred"].plot(ax=ax, label="res")
+            df.reset_index(inplace=True)
+            df = df.groupby(pd.Grouper(key="Date", freq=freq)).sum()
+            df.sort_values(by="Date", inplace=True)
+            df.index = df.index.strftime(datetimeFormat)
+            df.reset_index(inplace=True)
 
-            # plt.show()
-            print(pred_df)
-            PRED_FILE = str(user_id) + "-pred-for-" + filename
+            test.reset_index(inplace=True)
+            test = test.groupby(pd.Grouper(key="Date", freq=freq)).sum()
+            test.sort_values(by="Date", inplace=True)
+            test.index = test.index.strftime(datetimeFormat)
+            test.reset_index(inplace=True)
+
+            PRED_FILE = "predicted-" + filename
             pred_df.to_csv(ASSETS_FOLDER + "/predicted/" + PRED_FILE)
             pred_file_url = URL + "/api/prediction-file/" + PRED_FILE
 
@@ -162,14 +160,22 @@ class Predict(Resource):
                 "message": "success",
                 "view_train_file": training_file.file_path,
                 "pred_file_url": pred_file_url,
+                "rmse": "{0:.2f}".format(rmse),
+                "duration": duration,
+                "periodicity": periodicity,
+                "error_data": {
+                    "datetime": list(test["Date"]),
+                    "error": list(test["error"]),
+                },
                 "pred_data": {
-                    "datetime": list(pred_df.index.strftime("%d-%m-%y")),
+                    "datetime": list(pred_df["Date"]),
                     "Sales": list(pred_df["Sales"]),
                 },
                 "train_data": {
-                    "datetime": list(df.index.strftime("%d-%m-%y")),
+                    "datetime": list(df["Date"]),
                     "Sales": list(df["Sales"]),
                 },
+                "x": list(df["Date"]) + list(pred_df["Date"]),
             }
 
         else:
@@ -178,7 +184,6 @@ class Predict(Resource):
 
 class PredictionFile(Resource):
     def get(self, path):
-        print(path)
         try:
             return send_from_directory(
                 ASSETS_FOLDER + "/predicted/",

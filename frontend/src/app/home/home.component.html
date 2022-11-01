@@ -1,0 +1,21 @@
+<mat-card class="mat-card-main">
+    <p style="margin-top:-4px ;font-size: 45px;width: 100%; ">Sales Predictor</p>
+    <div class="second" >
+        <img src="../../assets/background1.jpg"  alt="">        
+        <mat-card class="mat-card-sec">
+            <p style="font-size: 40px; ">Welcome</p>
+            <div class="sub-card">
+                <p style="font-size: 20px; ">Click on the button below to login.</p>
+                <button style="width: 100%; height: 45px; font-size: 20px;" type="button" mat-raised-button color="primary" (click)="login.click()">Login</button>
+                <a href="/auth/login" #login></a>
+            </div>
+            <p style="font-size: 25px; margin: auto;">OR</p>
+            <div class="sub-card">
+                <p style="font-size: 20px;">First time to our website? Then click on the button bellow to signup.</p>
+                <button style="width: 100%; height: 45px; font-size: 20px;" type="button" mat-raised-button color="primary" (click)="signup.click()">Signup</button>
+                <a href="/auth/signup" #signup></a>
+            </div>
+
+        </mat-card>
+    </div>
+</mat-card>

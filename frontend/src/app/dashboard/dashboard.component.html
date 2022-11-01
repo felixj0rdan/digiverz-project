@@ -1,32 +1,51 @@
-<mat-card>
-    <mat-spinner *ngIf="isLoading"></mat-spinner>
+<div class="main">
+<mat-card class="mat-card-top">
+    <div *ngIf="isLoading">
+        <mat-spinner class="main-loader" *ngIf="isLoading"></mat-spinner>
+    </div>
     <form [formGroup]="form" (submit)="onPredict()" *ngIf="!isLoading">
+        <h2>Enter data</h2>
+        <div class="div1">
+            <div style="display: flex; width: 100%; justify-content: space-between;">
+            <button class="upload-button" mat-raised-button type="button" (click)="filePicker.click()">Pick Dataset&nbsp;<span class="material-symbols-rounded"  >file_upload</span></button>
+            <div *ngIf="filename" class="file-name" >{{filename}}</div>
+            
+            <input class="inputFile" type="file" #filePicker  (change)="onFilePicked($event)" required ></div>
 
-        <div>
-            <button mat-stroked-button type="button" (click)="filePicker.click()">Pick Dataset</button>
-            <input type="file" #filePicker  (change)="onFilePicked($event)" >
         </div>
-        <mat-form-field>
-            <input matInput type="number" placeholder="Days"  (change)="onDaysPicked($event)" formControlName="days"/>
-            <mat-error *ngIf="form.get('days')?.invalid">Enter valid count.</mat-error>
-        </mat-form-field>
+
+            <p class="periodicity">Periodicity:</p>
+            <mat-radio-group required="true" formControlName="periodicity" [(ngModel)]="periodicity"   aria-label="Select an option">
+                <mat-radio-button value="days" [checked]="true" >Daily</mat-radio-button><br>
+                <mat-radio-button value="weeks">Weekly</mat-radio-button><br>
+                <mat-radio-button value="months">Monthly</mat-radio-button><br>
+            </mat-radio-group>
+
+
+        <p class="">Duration:</p>
+        <mat-form-field class="days">
+            
+            <input matInput required="true"  type="number" placeholder="in {{periodicity}}"  (change)="onDurationPicked($event)" formControlName="duration"/>
+        </mat-form-field><br>
+
+
         <button mat-raised-button color="accent" type="submit">Predict</button>
     </form>
     
     
 </mat-card>
-<!-- <mat-card>
-
-    <div class="form-container mat-elevation-z5">
-        <h1>Upload your DataSet</h1>
-     <button mat-stroked-button type="button" (click)="filePicker.click()">Pick Dataset</button>
-     <input type="file" #filePicker (change)="getFile($event)">
-     <input type="number" placeholder="Days"  (change)="onDaysPicked($event)"/>
-    
-        <div class="center margin-top">
-            <button mat-raised-button color="primary" type="submit" (click)="submitData()">
-            Predict
-            </button>
+    <mat-card class="mat-card-top" [class]="errorChart? 'metrics-visible' : 'metrics-invisible'"  >
+        <canvas  id="ErrorChart"  width="100" height="100" #errChart ></canvas>
+        <div *ngIf="errorChart">
+            <p>The above graph represents variance between test prediction and actual sales for the last {{metrics.error_data.datetime.length +" "+ periodicity}} of the enetered dataset. </p>
+            <p>Below graph represents predicted sales (green) for {{metrics.duration+" "+metrics.periodicity}}.</p>
+            <p>RMSE:{{metrics.rmse}}</p>
+            <button type="button" mat-raised-button (click)="viewDataset.click()">Entered Dataset</button> <a class="links" [href]="metrics.view_train_file" target="_blank" #viewDataset >link</a>
+            <button type="button" mat-raised-button (click)="downloadResult.click()" >Download Prediction Dataset</button> <a class="links" [href]="metrics.pred_file_url" target="_blank" #downloadResult >link</a>
+            
         </div>
-    </div>
-</mat-card> -->
+    </mat-card>
+</div>
+<mat-card [class]="predictionChart? 'pred-visible' : 'pred-invisible'">
+    <canvas id="PredictionChart" class="PredictionChart" ></canvas>
+</mat-card>

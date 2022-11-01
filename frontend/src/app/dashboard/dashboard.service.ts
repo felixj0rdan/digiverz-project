@@ -18,7 +18,7 @@ export class DashboardService{
     
 
 
-    predict(file: File, days: string){
+    predict(file: File, duration: number, periodicity: string){
 
         const token = localStorage.getItem('access_token')
 
@@ -26,23 +26,15 @@ export class DashboardService{
             "Authorization": `Bearer ${token}`
         })
 
-        console.log(file);
         let options = {"headers": headers}
-        
-
+        let days:number = 0;
         let postData = new FormData();
 
         postData.set('file', file);
-        postData.set('days', days);
+        postData.set('duration', duration+"");
+        postData.set('periodicity', periodicity);
 
-        console.log(postData.get("file"));
-        
-
-        this.http.post<any>(BACKEND_URL+"/predict", postData)
-        .subscribe((response) => {
-            console.log(response);
-            
-        })
+        return this.http.post<any>(BACKEND_URL+"/predict", postData)
     }
 
 }

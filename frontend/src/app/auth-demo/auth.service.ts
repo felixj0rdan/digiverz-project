@@ -46,24 +46,27 @@ export class AuthService {
 
     createUser(email: string, password: string) {
         const authData: AuthData = {email: email, password: password};
-        this.http.post(BACKEND_URL + 'signup', authData)
+        return this.http.post<any>(BACKEND_URL + 'signup', authData)
         .subscribe(response => {
-            this.router.navigate(['/']);
+            if(response.message === "User already exists."){
+                alert(response.message)
+            } 
+            else
+            this.router.navigate(['/auth/login']);
         }, error => {
+            alert("Error")
             this.authStatusListener.next(false);
         });
     }
 
     login(email: string, password: string) {
         const authData: AuthData = {email: email, password: password};
-        // console.log(authData);
         
         this.http.post<any>(BACKEND_URL + 'login', authData)
         .subscribe(response => {
             const access_token = response.access_token;
             this.access_token = access_token;
             this.refresh_token = response.refresh_token;
-            // console.log(response);
             
             if(access_token){
                 this.isAuthenticated = true;
@@ -73,6 +76,7 @@ export class AuthService {
                 this.router.navigate(['/dashboard']);
             }
         }, error => {
+            alert("Incorrect credentials")
             this.authStatusListener.next(false);
         });
     }
@@ -92,7 +96,6 @@ export class AuthService {
             const access_token = response.access_token;
             this.access_token = access_token;
             this.refresh_token = response.refresh_token;
-            console.log(response);
             
             if(access_token){
                 this.isAuthenticated = true;
@@ -117,13 +120,6 @@ export class AuthService {
         this.router.navigate(['/']);
     }
 
-    // private setAuthTimer(duration: number) {
-    //     console.log("Setting timer: "+duration);
-        
-    //     this.tokenTimer = setTimeout(() => {
-    //         this.logout();
-    //     }, duration * 1000 )   
-    // }
 
     private saveAuthData(access_token: string, refresh_token: string, userId: string) {
         localStorage.setItem('access_token', access_token);

@@ -29,7 +29,7 @@ class UserSignup(Resource):
         data = UserSignup.parser.parse_args()
 
         if UserModel.find_one_by_email(data["email"]):
-            return {"message": "User already exists."}
+            return {"message": "User already exists."}, 400
 
         user = UserModel(**data)
 

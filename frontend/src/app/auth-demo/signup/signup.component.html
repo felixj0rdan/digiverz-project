@@ -1,4 +1,5 @@
 <mat-card>
+    <h2>User Signup</h2>
     <mat-spinner *ngIf="isLoading"></mat-spinner>
     <form (submit)="onSignup(signupForm)" #signupForm="ngForm" *ngIf="!isLoading">
         <mat-form-field>

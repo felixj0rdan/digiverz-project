@@ -1,38 +1,55 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { DashboardService } from './dashboard.service';
 import { mimeType } from "./mime-type.validator";
+import Chart from 'chart.js/auto';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
 
   filePreview="";
   isLoading = false;
   form!: FormGroup;
   file: any;
-  days: any;
+  filename = "";
+  duration: any;
+  periodicity='days';
+  public predictionChart: any;
+  public errorChart: any;
+  metrics: any;
+  ctx: any;
 
-  constructor(private dashboardService: DashboardService) { }
+  constructor(private dashboardService: DashboardService,private router: Router) { }
+  ngOnDestroy(): void {
+    
+  }
 
   ngOnInit(): void {
 
+    let loggedIn = localStorage.getItem('logged_in')
+    if(!loggedIn || loggedIn !== "true"){
+      this.router.navigate(['/'])
+    }
+
     this.form = new FormGroup({
-      'days': new FormControl(null, { validators: [Validators.required] }),
-      'file': new FormControl(null, { validators: [Validators.required], asyncValidators: [mimeType]})
+      'duration': new FormControl(null, { validators: [Validators.required] }),
+      'file': new FormControl(null, { validators: [Validators.required], asyncValidators: [mimeType]}),
+      'periodicity': new FormControl(null, { validators: [Validators.required] }),
   })
   }
 
   onFilePicked(event: Event) {
 
-    const file: any = (event.target as HTMLInputElement).files?.[0];
-    // const file = event.target.files[0]
-    
+    const file: any = (event.target as HTMLInputElement).files?.[0];  
 
     this.file = file
+    this.filename = file.name
+    
     
     this.form.patchValue({ 'file': file });
     this.form.get('file')?.updateValueAndValidity();
@@ -43,110 +60,134 @@ export class DashboardComponent implements OnInit {
     };
     reader.readAsDataURL(file);
 }
+removeFile(){
+  this.file = null
+  this.filename = ""
+}
 
 
 onPredict() {
+
+  if(!this.file || !this.duration || !this.periodicity){
+    alert("Please enter all the required details.")
+    return;
+  }
   
-  console.log(this.form);
-  // if (this.form.invalid)
-  //     return;
-  console.log(this.days);
   
   this.isLoading = true;
-  // if (this.mode === 'create') {
-  //     this.postsService.addPost(this.form.value.title, this.form.value.content, this.form.value.image)
-  // } else {
-  //     this.postsService.updatePost(
-  //         this.postId,
-  //         this.form.value.title,
-  //         this.form.value.content,
-  //         this.form.value.image
-  //     )
-  // }
-  this.dashboardService.predict(this.file, this.days)
+  this.dashboardService.predict(this.file, this.duration, this.periodicity)
+  .subscribe((response) => {
+      this.isLoading = false;
+      this.metrics = response;   
+      
+      this.createPredictionChart(response)
+      this.createErrorChart(response.error_data.datetime, response.error_data.error)
+      
+  })
 
   this.form.reset();
+  this.periodicity='days';
 }
 
-onDaysPicked(event: Event){
-  // this.days = document.getElementById('days')
-  // console.log(val);
-  this.days = (event.target as HTMLInputElement).value
+
+onDurationPicked(event: Event){
+  this.duration = (event.target as HTMLInputElement).value
+}
+createPredictionChart(response: any){
+  let buffer:any = []
+  for(let i=0; i<response.train_data.Sales.length; i++){
+    buffer[i] = null
+  }
+  let yax = buffer.concat(response.pred_data.Sales)
+  if(this.predictionChart)
+    this.predictionChart.destroy()
   
+  this.predictionChart = new Chart("PredictionChart", {
+    type: 'line', 
+
+    data: {
+      labels: response.x, 
+      datasets: [
+      {
+        label: "Past Sales",
+        data: response.train_data.Sales,
+        backgroundColor: "blue"
+
+      },
+      {
+        label: `Future Sales (for ${response.duration+" "+response.periodicity})`,
+        data: yax,
+        backgroundColor: 'limegreen',
+      }  
+    ]
+    },
+    
+    options: {
+      aspectRatio:2.5,
+      responsive: true,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        title: {
+            display: true,
+            text: `Predicted Sales`,
+            font: {
+              size: 30
+            }
+        }
+    }
+    }
+    
+  });
+
+}
+
+createErrorChart(datetime: any, error:any){
+
+  if(this.errorChart)
+    this.errorChart.destroy()
+  
+  this.ctx = document.getElementById('ErrorChart');
+  
+  this.errorChart = new Chart(this.ctx, {
+    type: 'bar', 
+
+    data: {
+      labels: datetime, 
+      datasets: [
+      {
+        label: "Variance",
+        data: error,
+        backgroundColor: "blue"
+
+      }
+    ]
+    },
+    
+    options: {
+      aspectRatio:2.5,
+      responsive: true,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        title: {
+            display: true,
+            text: 'Test Prediction vs Actual Sales Variance Graph',
+            font: {
+              size: 20
+            }
+        }
+    }
+    }
+    
+  });
+
 }
 
 
 }
 
-// --------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-// import { Component, OnInit } from '@angular/core';
-// // import { AuthenticationService } from 'src/app/services/authentication.service';
-// import { HttpClientModule } from '@angular/common/http';
-// import { HttpClient, HttpHeaders } from '@angular/common/http'
-// // import { HotToastService } from '@ngneat/hot-toast';
-
-// @Component({
-//   selector: 'app-dashboard',
-//   templateUrl: './dashboard.component.html',
-//   styleUrls: ['./dashboard.component.css']
-// })
-// export class DashboardComponent implements OnInit {
- 
-
-
-//   // user$ = this.authService.currentUser$;
-
-//   constructor(
-//     // private authService: AuthenticationService,
-//     // private http: HttpClientModule,
-//     private http: HttpClient,
-//     // private toast: HotToastService,
-
-//     ) { }
-
-//   ngOnInit(): void {
-//   }
-//   file:any;
-//   days: any;
-//   getFile(event:any){
-//     this.file=event.target.files[0];
-//     console.log("file",this.file)
-
-//   }
-//   onDaysPicked(event:any){
-//     this.days=event.target.value;
-//     console.log("days",this.days)
-
-//   }
-//   submitData(){
-
-//     const token = localStorage.getItem('access_token')
-
-//     // const headers = new HttpHeaders({
-//     //       'Content-Type': 'multipart/form-data'
-//     //   })
-
-//     console.log(token);
-    
-
-//     let formData = new FormData();
-//     formData.set("file",this.file)
-//     formData.set("days",this.days)
-
-//     // console.log(formData.forEach);
-//     formData.forEach((element: any) => {
-//       console.log(element);
-      
-//     });
-    
-
-//     this.http.post<any>("http://127.0.0.1:5000/api/predict",formData)
-//     .subscribe((response)=>
-//     {
-//       console.log(response)
-//     })
-//   }
- 
- 
-//     }

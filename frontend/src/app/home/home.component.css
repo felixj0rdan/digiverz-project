@@ -1,0 +1,27 @@
+.mat-card-main {
+    width: 100%;
+    margin: auto;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+img {
+    width: 65%;
+    margin: auto;
+    margin-top: -42px;
+}
+.second {
+    display: flex;
+    justify-content:center ;
+}
+.mat-card-sec {
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+.sub-card {
+    height: 50%;
+    margin-bottom: -70px;
+}
