@@ -78,7 +78,9 @@ onPredict() {
   this.dashboardService.predict(this.file, this.duration, this.periodicity)
   .subscribe((response) => {
       this.isLoading = false;
-      this.metrics = response;   
+      this.metrics = response;  
+      console.log(this.metrics);
+       
       
       this.createPredictionChart(response)
       this.createErrorChart(response.error_data.datetime, response.error_data.error)
@@ -176,7 +178,7 @@ createErrorChart(datetime: any, error:any){
       plugins: {
         title: {
             display: true,
-            text: 'Test Prediction vs Actual Sales Variance Graph',
+            text: 'Test Prediction & Actual Sales Variance Graph',
             font: {
               size: 20
             }

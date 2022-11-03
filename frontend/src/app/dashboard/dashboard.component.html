@@ -37,11 +37,15 @@
     <mat-card class="mat-card-top" [class]="errorChart? 'metrics-visible' : 'metrics-invisible'"  >
         <canvas  id="ErrorChart"  width="100" height="100" #errChart ></canvas>
         <div *ngIf="errorChart">
-            <p>The above graph represents variance between test prediction and actual sales for the last {{metrics.error_data.datetime.length +" "+ periodicity}} of the enetered dataset. </p>
+            <p>The above graph represents variance between test prediction and actual sales for the last {{metrics.error_data.datetime.length +" "+ periodicity}} of the entered dataset. </p>
             <p>Below graph represents predicted sales (green) for {{metrics.duration+" "+metrics.periodicity}}.</p>
             <p>RMSE:{{metrics.rmse}}</p>
-            <button type="button" mat-raised-button (click)="viewDataset.click()">Entered Dataset</button> <a class="links" [href]="metrics.view_train_file" target="_blank" #viewDataset >link</a>
-            <button type="button" mat-raised-button (click)="downloadResult.click()" >Download Prediction Dataset</button> <a class="links" [href]="metrics.pred_file_url" target="_blank" #downloadResult >link</a>
+            <div style="display: flex;">
+
+                <button type="button" mat-raised-button (click)="viewDataset.click()">Entered Dataset</button> <a class="links" [href]="metrics.view_train_file" target="_blank" #viewDataset >link</a>
+                <button type="button" mat-raised-button (click)="downloadResult.click()" >Download Prediction Dataset</button> <a class="links" [href]="metrics.pred_file_url" target="_blank" #downloadResult >link</a>
+                <button type="button" mat-raised-button (click)="downloadError.click()" >Download Error Dataset</button> <a class="links" [href]="metrics.error_file_url" target="_blank" #downloadError >link</a>
+            </div>
             
         </div>
     </mat-card>

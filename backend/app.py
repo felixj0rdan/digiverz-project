@@ -7,7 +7,7 @@ from flask_cors import CORS
 
 from blacklist import BLACKLIST
 from constructors.user import UserSignup, UserLogin, UserLogout, TokenRefresh
-from constructors.mlmodel import Predict, PredictionFile
+from constructors.mlmodel import Predict, PredictionFile, ErrorFile
 
 ASSETS_FOLDER = "assets"
 
@@ -53,7 +53,8 @@ api.add_resource(UserLogin, "/api/user/login")
 api.add_resource(UserLogout, "/api/user/logout")
 api.add_resource(TokenRefresh, "/api/refresh")
 api.add_resource(Predict, "/api/predict/")
-api.add_resource(PredictionFile, "/api/prediction-file/<string:path>")
+api.add_resource(PredictionFile, "/api/predicted/<string:path>")
+api.add_resource(ErrorFile, "/api/error/<string:path>")
 
 
 @app.route("/api/training-file/<string:path>")

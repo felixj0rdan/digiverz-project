@@ -154,12 +154,18 @@ class Predict(Resource):
 
             PRED_FILE = "predicted-" + filename
             pred_df.to_csv(ASSETS_FOLDER + "/predicted/" + PRED_FILE)
-            pred_file_url = URL + "/api/prediction-file/" + PRED_FILE
+            pred_file_url = URL + "/api/predicted/" + PRED_FILE
+
+            ERR_FILE = "error-" + filename
+            test.to_csv(ASSETS_FOLDER + "/error/" + ERR_FILE)
+            err_file_url = URL + "/api/error/" + ERR_FILE
+            print(err_file_url)
 
             return {
                 "message": "success",
                 "view_train_file": training_file.file_path,
                 "pred_file_url": pred_file_url,
+                "error_file_url": err_file_url,
                 "rmse": "{0:.2f}".format(rmse),
                 "duration": duration,
                 "periodicity": periodicity,
@@ -187,6 +193,20 @@ class PredictionFile(Resource):
         try:
             return send_from_directory(
                 ASSETS_FOLDER + "/predicted/",
+                path=path,
+                as_attachment=True,
+                mimetype="text/csv",
+            )
+
+        except FileNotFoundError:
+            return {"message": "File not Found"}, 404
+
+
+class ErrorFile(Resource):
+    def get(self, path):
+        try:
+            return send_from_directory(
+                ASSETS_FOLDER + "/error/",
                 path=path,
                 as_attachment=True,
                 mimetype="text/csv",
